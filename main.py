@@ -8,16 +8,16 @@ from time import sleep
 from google.cloud import speech
 from pydub import AudioSegment
 
+from os import listdir
+from os.path import isfile, join
+
+import ntpath
+
 # Cross-platform compatibility
 import platform
 
 if platform.system() == "Windows":
     AudioSegment.converter = "C:\\Users\\User\\Software\\ffmpeg-20170702-c885356-win64-static\\bin\\ffmpeg.exe"
-
-from os import listdir
-from os.path import isfile, join
-
-import ntpath
 
 RESOURCES = 'resources'
 
