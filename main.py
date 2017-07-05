@@ -7,6 +7,12 @@ from time import sleep
 from google.cloud import speech
 from pydub import AudioSegment
 
+# Cross-platform compatibility
+import platform
+
+if platform.system() == "Windows":
+    AudioSegment.converter = "C:\\Users\\User\\Software\\ffmpeg-20170702-c885356-win64-static\\bin\\ffmpeg.exe"
+
 
 def run():
     """
@@ -18,25 +24,25 @@ def run():
     speech_client = speech.Client()
 
     # The name of the audio file to transcribe
-    file_name = os.path.join(
+    in_file_name = os.path.join(
         os.path.dirname(__file__),
         'resources',
         'russian.wav')
 
-    # Convert WAV to FLAC using pydub library
-    song = AudioSegment.from_wav(file_name)
-    # Convert to mono channel as google cloud API works only with mono sound
-    song.export("resources/russian.flac", format="flac", parameters=["-ac", "1"])
-
     # Use new file name of flac file to transcribe
-    file_name = os.path.join(
+    out_file_name = os.path.join(
         os.path.dirname(__file__),
         'resources',
         'russian.flac')
-    # print(file_name)
+
+    # Convert WAV to FLAC using pydub library
+    song = AudioSegment.from_wav(in_file_name)
+    # Convert to mono channel as google cloud API works only with mono sound
+    song.export(out_file_name, format="flac", parameters=["-ac", "1"])
+    print('File converted to flac')
 
     # Loads the audio into memory
-    with io.open(file_name, 'rb') as audio_file:
+    with io.open(out_file_name, 'rb') as audio_file:
         content = audio_file.read()
         sample = speech_client.sample(
             content,
