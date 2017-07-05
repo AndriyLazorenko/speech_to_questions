@@ -71,6 +71,5 @@ def run():
 
         # TODO: debug loading from json so that russian text is displayed correctly
 
-
 if __name__ == '__main__':
     run()
