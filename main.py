@@ -64,14 +64,15 @@ def run():
     list_filepaths = get_filepaths("FLAC")
 
     # Loads the audio into memory
-    def flacs_to_json(list_paths):
+    def flacs_to_transcribed_dict(list_paths):
         all_transcripts = dict()
         for path in list_paths:
             with io.open(path, 'rb') as audio_file:
                 content = audio_file.read()
                 sample = speech_client.sample(content, encoding='FLAC')
                 # Detects speech in the audio file
-                alternatives = sample.recognize('ru')
+                # TODO: do we need several alternatives or just the best shot? Accuracy improvement issue
+                alternatives = sample.recognize('ru', max_alternatives=1)
                 results = list()
                 for alternative in alternatives:
                     print('Transcript: {}'.format(alternative.transcript))
@@ -108,7 +109,7 @@ def run():
     try:
         tr_json = load_json_transcript()
     except FileNotFoundError as err:
-        transcripts = flacs_to_json(list_filepaths)
+        transcripts = flacs_to_transcribed_dict(list_filepaths)
         create_json_transcript(transcripts)
         tr_json = load_json_transcript()
 
