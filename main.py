@@ -115,6 +115,8 @@ def run():
 
     pprint(tr_json)
 
+    # TODO: need to implement denoising of transcripts using pipeline found in topic modelling denoising.
+
 
 if __name__ == '__main__':
     run()
