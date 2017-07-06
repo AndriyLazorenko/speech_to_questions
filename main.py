@@ -1,5 +1,6 @@
 import io
 import json
+from pprint import pprint
 import os
 
 # Imports the Google Cloud client library
@@ -13,15 +14,22 @@ from os.path import isfile, join
 
 import ntpath
 
+from tinytag import TinyTag
+
+from collections import Counter
+
 # Cross-platform compatibility
 import platform
 
 if platform.system() == "Windows":
     AudioSegment.converter = "C:\\Users\\User\\Software\\ffmpeg-20170702-c885356-win64-static\\bin\\ffmpeg.exe"
 
+# Constants
 RESOURCES = 'resources'
+CURRENT_PATH = os.path.dirname(__file__)
 
 
+# TODO: add method that downloads large flac file from google drive
 def run():
     """
     A method that produces transcripts of speech from audio files using google cloud and pydub
@@ -32,10 +40,13 @@ def run():
     speech_client = speech.Client()
 
     # Get all files in resources dir
-    def get_filepaths(sound_format=str()):
-        path = join(os.path.dirname(__file__), RESOURCES)
+    def get_filepaths(sound_format=str(), if_not_converted=False):
+        path = join(CURRENT_PATH, RESOURCES)
         onlyfiles = [f for f in listdir(path) if isfile(join(path, f)) and f.endswith("." + sound_format.lower())]
-        paths = [join(os.path.dirname(__file__), RESOURCES, f) for f in onlyfiles]
+        if if_not_converted:
+            paths = [join(CURRENT_PATH, RESOURCES, f) for f in onlyfiles if not isfile(join(path, f[:-3] + "flac"))]
+        else:
+            paths = [join(CURRENT_PATH, RESOURCES, f) for f in onlyfiles]
         return paths
 
     # Convert WAV to FLAC using pydub library
@@ -46,14 +57,14 @@ def run():
             # Convert to mono channel as google cloud API works only with mono sound
             song.export(out_path, format="flac", parameters=["-ac", "1"])
 
-    list_filepaths = get_filepaths("WAV")
+    list_filepaths = get_filepaths("WAV", if_not_converted=True)
     wav2flac(list_filepaths)
 
     # Use flac files to transcribe
     list_filepaths = get_filepaths("FLAC")
 
     # Loads the audio into memory
-    def transcribe_all_flacs(list_paths):
+    def flacs_to_json(list_paths):
         all_transcripts = dict()
         for path in list_paths:
             with io.open(path, 'rb') as audio_file:
@@ -66,16 +77,43 @@ def run():
                     print('Transcript: {}'.format(alternative.transcript))
                     results.append(alternative.transcript)
                 file_name = ntpath.basename(path)
-                all_transcripts[file_name] = results
+                info = dict()
+                tag = TinyTag.get(path)
+                info['duration_seconds'] = tag.duration
+                if len(results) > 1:
+                    alter_info = dict()
+                    for index, alternative in enumerate(results):
+                        alter_info['word_count'] = Counter(alternative.split())
+                        alter_info['num_words'] = sum(info['word_count'].values())
+                        alter_info['transcript'] = alternative
+                        info['alternative'+str(index)] = alter_info
+                else:
+                    info['word_count'] = Counter(results[0].split())
+                    info['num_words'] = sum(info['word_count'].values())
+                    info['transcript'] = results[0]
+                all_transcripts[file_name] = info
         return all_transcripts
 
-    transcripts = transcribe_all_flacs(list_filepaths)
-    transcripts_filename = "transcripts.json"
-    tr_path = join(os.path.dirname(__file__), RESOURCES, transcripts_filename)
-    with open(tr_path, 'w') as outfile:
-        json.dump(transcripts, outfile)
+    def create_json_transcript(tscripts=dict(), filename="transcripts.json"):
+        tr_path = join(CURRENT_PATH, RESOURCES, filename)
+        with open(tr_path, 'w') as outfile:
+            json.dump(tscripts, outfile)
 
-        # TODO: debug loading from json so that russian text is displayed correctly
+    def load_json_transcript(filename="transcripts.json"):
+        tr_path = join(CURRENT_PATH, RESOURCES, filename)
+        with open(tr_path) as data_file:
+            data = json.load(data_file)
+        return data
+
+    try:
+        tr_json = load_json_transcript()
+    except FileNotFoundError as err:
+        transcripts = flacs_to_json(list_filepaths)
+        create_json_transcript(transcripts)
+        tr_json = load_json_transcript()
+
+    pprint(tr_json)
+
 
 if __name__ == '__main__':
     run()
