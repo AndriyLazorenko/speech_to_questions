@@ -1,6 +1,8 @@
 import psycopg2
 from postgre_conn.config import config
 
+TABLE_NAME = config(section='table_name')['table_name']
+
 
 def delete_seq(seq_id):
     """
@@ -8,8 +10,8 @@ def delete_seq(seq_id):
     :return: number of deleted rows
     """
     sql_query = """
-    DELETE FROM words_seq WHERE seq_id = %s
-    """
+    DELETE FROM {0} WHERE seq_id = %s
+    """.format(TABLE_NAME)
     conn = None
     rows_deleted = 0
     try:
