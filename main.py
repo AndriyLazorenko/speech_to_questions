@@ -30,6 +30,7 @@ CURRENT_PATH = os.path.dirname(__file__)
 
 
 # TODO: migrate project to gitlab on Asgard server
+
 def run():
     """
     A method that produces transcripts of speech from audio files using google cloud and pydub
