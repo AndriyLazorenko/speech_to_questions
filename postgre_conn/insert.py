@@ -1,8 +1,9 @@
 import psycopg2
 from postgre_conn.config import config
+
 import json
 
-TABLE_NAME = config(section='table_name')['table_name']
+TABLE_NAME = config(section='names')['table_name']
 
 
 def insert_all_transcripts(transcript_dict=dict()):

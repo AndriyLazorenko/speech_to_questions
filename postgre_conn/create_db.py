@@ -1,40 +1,35 @@
 import psycopg2
 from postgre_conn.config import config
+from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
+
+DATABASE_NAME = config()['database']
 
 
-TABLE_NAME = config(section='names')['table_name']
-
-
-def create_tables():
+def create_db():
     """
-    Create tables in the database
+    Create new database
     """
     command = """
-        CREATE TABLE {0} (
-            id SERIAL PRIMARY KEY,
-            duration_seconds DECIMAL(7,2),
-            num_words INTEGER,
-            transcript TEXT,
-            word_count JSON
-        )
-        """.format(TABLE_NAME)
+        CREATE DATABASE {0}
+        """.format(DATABASE_NAME)
     conn = None
     try:
         # read the connection parameters
-        params = config()
+        params = config(section='postgresql_newdb')
         # connect to the PostgreSQL server
         conn = psycopg2.connect(**params)
+        conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
         cur = conn.cursor()
 
-        # create table
+        # create db
         cur.execute(command)
 
-        # close communication with the PostgreSQL database server
+        # close communication with the database server
         cur.close()
         # commit the changes
         conn.commit()
 
-        print('Table has been created')
+        print('DB has been created')
 
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
@@ -44,4 +39,4 @@ def create_tables():
 
 
 if __name__ == '__main__':
-    create_tables()
+    create_db()

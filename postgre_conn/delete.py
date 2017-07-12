@@ -1,12 +1,12 @@
 import psycopg2
 from postgre_conn.config import config
 
-TABLE_NAME = config(section='table_name')['table_name']
+TABLE_NAME = config(section='names')['table_name']
 
 
 def delete_row(id):
     """
-    Delete seq by seq_id
+    Delete by id
     :return: number of deleted rows
     """
     sql_query = """
