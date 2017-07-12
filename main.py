@@ -29,7 +29,7 @@ RESOURCES = 'resources'
 CURRENT_PATH = os.path.dirname(__file__)
 
 
-# TODO: add method that downloads large flac file from google drive
+# TODO: migrate project to gitlab on Asgard server
 def run():
     """
     A method that produces transcripts of speech from audio files using google cloud and pydub
